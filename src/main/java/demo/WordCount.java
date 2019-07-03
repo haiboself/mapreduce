@@ -17,14 +17,14 @@ public class WordCount
 {
 
     static class Mapper
-            implements mapper.Mapper<Integer, String>
+            implements mapper.Mapper<Integer, String, String, String>
     {
         @Override
-        public <K2 extends Comparable<K2>, V2> List<Record<K2, V2>> map(Record<Integer, String> r)
+        public List<Record<String, String>> map(Record<Integer, String> r)
         {
-            List<Record<K2, V2>> res = new ArrayList<>();
+            List<Record<String,String>> res = new ArrayList<>();
             // todo: 范型如何更好使用
-            res.add((Record<K2, V2>) new Record<String, String>(r.getV(), "1"));
+            res.add(new Record<>(r.getV(), "1"));
             return res;
         }
     }
@@ -44,7 +44,7 @@ public class WordCount
         Master<Integer, String, String, String> master = new Master<>();
         master.setMap(new Mapper());
         master.setReduce(new Reducer());
-        master.setMaps(2);
+        master.setMaps(6);
 
         master.setInputFormat(new StringInputFormat("a,b,c,d,e,f,g,a,a,a,b,c,d,d,g",","));
         HashMap<Integer,List<String>> res = master.process();

@@ -33,7 +33,7 @@ public class Master<K1 extends Comparable<K1>, V1, K2 extends Comparable<K2>, V2
      */
     private int reduces = 1;
 
-    private Mapper<K1, V1> map;
+    private Mapper<K1, V1, K2, V2> map;
     private Reducer<K2, V2> reduce;
     private InputFormat<K1, V1> inputFormat;
     private Partitioner<K2, V2> partitioner = new HashPartition<>();

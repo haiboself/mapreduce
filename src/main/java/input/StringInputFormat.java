@@ -7,7 +7,8 @@ import java.util.List;
 import java.util.Objects;
 
 @AllArgsConstructor
-public class StringInputFormat implements InputFormat<Integer,String>
+public class StringInputFormat
+        implements InputFormat<Integer, String>
 {
     private String content;
     private String delimiter;
@@ -15,22 +16,33 @@ public class StringInputFormat implements InputFormat<Integer,String>
     @Override
     public List<Partition<Integer, String>> partitions(int n)
     {
+        assert n > 0;
         Objects.requireNonNull(content);
+
         String[] ss = content.split(delimiter);
+        int step = 0;
 
-        // todo: 当无法整除时
-        int step = ss.length / n;
+        if(ss.length <= n){
+            n = ss.length;
+            step = 1;
+        } else {
+            step = ss.length / n;
+        }
 
-        List<Partition<Integer,String>> res = new ArrayList<>();
+        List<Partition<Integer, String>> res = new ArrayList<>();
 
         int count = 0;
-        for(int i = 0; i < n; i++){
+        for (int i = 0; i < n; i++) {
 
-            List<Record<Integer,String>> part = new ArrayList<>(step);
+            List<Record<Integer, String>> part = new ArrayList<>(step);
 
-            int end = Math.min(step * i + step, ss.length);
-            for(int s = step * i; s < end; s++){
-                part.add(new Record<>(count++,ss[s]));
+            int end = step * i + step;
+            if(i == n - 1 && end < ss.length){
+                end = ss.length;
+            }
+
+            for (int s = step * i; s < end; s++) {
+                part.add(new Record<>(count++, ss[s]));
             }
 
             res.add(part::iterator);
