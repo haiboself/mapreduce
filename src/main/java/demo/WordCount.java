@@ -1,10 +1,8 @@
 package demo;
 
-import com.sun.tools.javac.util.StringUtils;
-import input.InputFormat;
 import input.Record;
 import input.StringInputFormat;
-import schedule.Master;
+import schedule.Driver;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,7 +21,6 @@ public class WordCount
         public List<Record<String, String>> map(Record<Integer, String> r)
         {
             List<Record<String,String>> res = new ArrayList<>();
-            // todo: 范型如何更好使用
             res.add(new Record<>(r.getV(), "1"));
             return res;
         }
@@ -40,14 +37,14 @@ public class WordCount
 
     public static void main(String[] args)
     {
-        // todo: StringInputFormat 切分数据有 bug
-        Master<Integer, String, String, String> master = new Master<>();
-        master.setMap(new Mapper());
-        master.setReduce(new Reducer());
-        master.setMaps(6);
+        Driver<Integer, String, String, String> driver = new Driver<>();
+        driver.setMap(new Mapper());
+        driver.setReduce(new Reducer());
+        driver.setMaps(26);
+        driver.setReduces(6);
 
-        master.setInputFormat(new StringInputFormat("a,b,c,d,e,f,g,a,a,a,b,c,d,d,g",","));
-        HashMap<Integer,List<String>> res = master.process();
+        driver.setInputFormat(new StringInputFormat("a,b,c,d,e,f,g,a,a,a,b,c,d,d,g",","));
+        HashMap<Integer,List<String>> res = driver.process();
 
         for(Map.Entry<Integer,List<String>> entry : res.entrySet()){
             System.out.println(entry.getValue().stream().map(String::valueOf).collect(Collectors.joining("\n")));

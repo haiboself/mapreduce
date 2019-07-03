@@ -2,7 +2,7 @@ package demo;
 
 import input.Record;
 import input.StringInputFormat;
-import schedule.Master;
+import schedule.Driver;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+// todo: 目前将所有数据 shuffle 到一个 reduce 去计算,如何分治去实现
 public class AVG
 {
     static class Mapper
@@ -41,14 +42,14 @@ public class AVG
 
     public static void main(String[] args)
     {
-        Master<Integer,String,Integer,Integer> master = new Master<>();
-        master.setMap(new AVG.Mapper());
-        master.setReduce(new AVG.Reducer());
+        Driver<Integer,String,Integer,Integer> driver = new Driver<>();
+        driver.setMap(new AVG.Mapper());
+        driver.setReduce(new AVG.Reducer());
 
-        master.setMaps(6);
+        driver.setMaps(6);
 
-        master.setInputFormat(new StringInputFormat("1,2,3,4,5,6,7,8,9,10",","));
-        HashMap<Integer,List<Integer>> res = master.process();
+        driver.setInputFormat(new StringInputFormat("1,2,3,4,5,6,7,8,9,10",","));
+        HashMap<Integer,List<Integer>> res = driver.process();
 
         for(Map.Entry<Integer,List<Integer>> entry : res.entrySet()){
             System.out.println(entry.getValue().stream().map(String::valueOf).collect(Collectors.joining("\n")));
