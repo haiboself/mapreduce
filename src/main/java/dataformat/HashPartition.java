@@ -1,4 +1,4 @@
-package output;
+package dataformat;
 
 import java.util.Objects;
 

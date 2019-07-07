@@ -1,14 +1,14 @@
-package input;
+package dataformat;
 
 import lombok.AllArgsConstructor;
+import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @AllArgsConstructor
-public class StringInputFormat
-        implements InputFormat<Integer, String>
+public class StringInputFormat implements DataFormat<Integer, String, String, String>
 {
     private String content;
     private String delimiter;

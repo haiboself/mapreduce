@@ -1,13 +1,13 @@
 package schedule;
 
-import input.InputFormat;
-import input.Partition;
-import input.Record;
+import dataformat.DataFormat;
+import dataformat.Partition;
+import dataformat.Record;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import mapper.Mapper;
-import output.HashPartition;
-import output.Partitioner;
+import dataformat.HashPartition;
+import dataformat.Partitioner;
 import reducer.Reducer;
 
 import java.util.Collections;
@@ -20,20 +20,21 @@ import java.util.Objects;
 
 @Data
 @NoArgsConstructor
-public class Driver<K1 extends Comparable<K1>, V1, K2 extends Comparable<K2>, V2>
+public class Driver<K1, V1, K2, V2, K3, V3>
 {
-    /**
-     * map 数
-     */
-    private int maps = 1;
+
+    private Conf conf;
     /**
      * reduce 数
      */
     private int reduces = 1;
 
-    private Mapper<K1, V1, K2, V2> map;
-    private Reducer<K2, V2> reduce;
-    private InputFormat<K1, V1> inputFormat;
+    private Mapper<K1, V1, K2, V2> mapper;
+    private Reducer<K2, V2, K3, V3> reducer;
+    private Reducer<K2, V2, K3, V3> combiner;
+
+    private DataFormat<K1, V1, K3, V3> inputFormat;
+    private DataFormat<K1, V1, K3, V3> outputFormat;
     private Partitioner<K2, V2> partitioner = new HashPartition<>();
 
     /**
@@ -44,13 +45,14 @@ public class Driver<K1 extends Comparable<K1>, V1, K2 extends Comparable<K2>, V2
 
     public HashMap<Integer, List<V2>> process()
     {
-        Objects.requireNonNull(map);
-        Objects.requireNonNull(reduce);
+        Objects.requireNonNull(mapper);
+        Objects.requireNonNull(reducer);
         Objects.requireNonNull(inputFormat);
+        Objects.requireNonNull(outputFormat);
 
         // map stage
         int r = 0;
-        for (Partition<K1, V1> p : inputFormat.partitions(maps)) {
+        for (Partition<K1, V1> p : inputFormat.partitions()) {
             mapTask(r++, p);
         }
 

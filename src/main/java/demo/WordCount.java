@@ -1,49 +1,53 @@
 package demo;
 
-import input.Record;
-import input.StringInputFormat;
+import dataformat.Record;
+import dataformat.StringInputFormat;
+import schedule.Conf;
 import schedule.Driver;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * @author haibo
+ */
 public class WordCount
 {
 
-    static class Mapper
-            implements mapper.Mapper<Integer, String, String, String>
+    static class TokenizerMapper extends mapper.Mapper<Integer, String, String, Integer>
     {
+
         @Override
-        public List<Record<String, String>> map(Record<Integer, String> r)
+        public List<Record<String, Integer>> map(Integer k, String v)
         {
-            List<Record<String,String>> res = new ArrayList<>();
-            res.add(new Record<>(r.getV(), "1"));
+            List<Record<String,Integer>> res = new ArrayList<>();
+            res.add(new Record<>(v, 1));
             return res;
         }
     }
 
-    static class Reducer implements reducer.Reducer<String,String> {
-
+    static class IntSumReducer extends reducer.Reducer<String,Integer,String,Integer> {
         @Override
-        public List<String> reduce(String k, List<String> vs)
+        public Record<String, Integer> reduce(String k, List<Integer> vs)
         {
-            return Collections.singletonList(k + " " + vs.size() + "\n");
+            return new Record<>(k,vs.size());
         }
     }
 
     public static void main(String[] args)
     {
-        Driver<Integer, String, String, String> driver = new Driver<>();
-        driver.setMap(new Mapper());
-        driver.setReduce(new Reducer());
-        driver.setMaps(26);
+        Driver<Integer, String, String, Integer, String, Integer> driver = new Driver<>();
+        driver.setConf(new Conf());
+        driver.setMapper(new TokenizerMapper());
+        driver.setReducer(new IntSumReducer());
+        driver.setCombiner(new IntSumReducer());
         driver.setReduces(6);
-
         driver.setInputFormat(new StringInputFormat("a,b,c,d,e,f,g,a,a,a,b,c,d,d,g",","));
+        driver.setOutputFormat(new StringInputFormat());
+
         HashMap<Integer,List<String>> res = driver.process();
 
         for(Map.Entry<Integer,List<String>> entry : res.entrySet()){

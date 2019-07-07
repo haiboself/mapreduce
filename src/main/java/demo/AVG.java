@@ -1,7 +1,7 @@
 package demo;
 
-import input.Record;
-import input.StringInputFormat;
+import dataformat.Record;
+import dataformat.StringInputFormat;
 import schedule.Driver;
 
 import java.util.Collections;

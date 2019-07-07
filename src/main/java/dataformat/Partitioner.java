@@ -1,4 +1,4 @@
-package output;
+package dataformat;
 
 public interface Partitioner<K2,V2>
 {
