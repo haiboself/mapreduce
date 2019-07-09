@@ -1,11 +1,15 @@
 package demo;
 
+import dataformat.DataFormat;
 import dataformat.Record;
 import dataformat.StringInputFormat;
 import schedule.Conf;
 import schedule.Driver;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,9 +27,7 @@ public class WordCount
         @Override
         public List<Record<String, Integer>> map(Integer k, String v)
         {
-            List<Record<String,Integer>> res = new ArrayList<>();
-            res.add(new Record<>(v, 1));
-            return res;
+            return Collections.singletonList(new Record<>(v, 1));
         }
     }
 
@@ -44,14 +46,14 @@ public class WordCount
         driver.setMapper(new TokenizerMapper());
         driver.setReducer(new IntSumReducer());
         driver.setCombiner(new IntSumReducer());
-        driver.setReduces(6);
+        driver.setReduces(3);
         driver.setInputFormat(new StringInputFormat("a,b,c,d,e,f,g,a,a,a,b,c,d,d,g",","));
         driver.setOutputFormat(new StringInputFormat());
 
-        HashMap<Integer,List<String>> res = driver.process();
-
-        for(Map.Entry<Integer,List<String>> entry : res.entrySet()){
-            System.out.println(entry.getValue().stream().map(String::valueOf).collect(Collectors.joining("\n")));
+        HashMap<Integer,DataFormat<Integer,String,String,Integer>> res = driver.submit();
+        // todo: 结果不对
+        for (DataFormat<Integer,String,String,Integer> f : res.values()){
+            System.out.println(f);
         }
     }
 }

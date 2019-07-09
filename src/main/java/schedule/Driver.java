@@ -3,6 +3,7 @@ package schedule;
 import dataformat.DataFormat;
 import dataformat.Partition;
 import dataformat.Record;
+import dataformat.RecordReader;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import mapper.Mapper;
@@ -10,7 +11,10 @@ import dataformat.HashPartition;
 import dataformat.Partitioner;
 import reducer.Reducer;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -31,19 +35,19 @@ public class Driver<K1, V1, K2, V2, K3, V3>
 
     private Mapper<K1, V1, K2, V2> mapper;
     private Reducer<K2, V2, K3, V3> reducer;
-    private Reducer<K2, V2, K3, V3> combiner;
+    private Reducer<K2, V2, K2, V2> combiner;
 
     private DataFormat<K1, V1, K3, V3> inputFormat;
     private DataFormat<K1, V1, K3, V3> outputFormat;
-    private Partitioner<K2, V2> partitioner = new HashPartition<>();
+    private Partitioner partitioner = new HashPartition();
 
     /**
      * cache map outputs
      */
-    private HashMap<Integer, HashMap<Integer, List<Record<K2, V2>>>> inteCache = new HashMap<>(reduces);
-    private HashMap<Integer, List<V2>> outputCache = new HashMap<>(reduces);
+    private HashMap<Integer, HashMap<Integer, List<Record<K2,V2>>>> inteCache = new HashMap<>(reduces);
+    private HashMap<Integer, DataFormat<K1, V1, K3, V3>> outputCache = new HashMap<>(reduces);
 
-    public HashMap<Integer, List<V2>> process()
+    public HashMap<Integer, DataFormat<K1, V1, K3, V3>> submit()
     {
         Objects.requireNonNull(mapper);
         Objects.requireNonNull(reducer);
@@ -52,8 +56,8 @@ public class Driver<K1, V1, K2, V2, K3, V3>
 
         // map stage
         int r = 0;
-        for (Partition<K1, V1> p : inputFormat.partitions()) {
-            mapTask(r++, p);
+        for (Partition p : inputFormat.partitions(conf)) {
+            mapTask(r++, inputFormat.getRecordReader(p));
         }
 
         // reduce stage
@@ -65,18 +69,30 @@ public class Driver<K1, V1, K2, V2, K3, V3>
         return outputCache;
     }
 
-    private void mapTask(int number, Partition<K1, V1> p)
+    private void mapTask(int number,  RecordReader<K1,V1> reader)
     {
-        Iterator<Record<K1, V1>> iterator = p.iterator();
         List<Record<K2, V2>> res = new LinkedList<>();
 
-        while (iterator.hasNext()) {
-            Record<K1, V1> record = iterator.next();
-            res.addAll(map.map(record));
+        while (reader.hasNext()) {
+            res.addAll(mapper.map(reader.getCurKey(),reader.getCurVal()));
         }
 
-        HashMap<Integer, List<Record<K2, V2>>> resPars = partition(res);
-        inteCache.put(number, resPars);
+        if(combiner != null){
+            // combiner
+            HashMap<K2,List<V2>> groups = groupByKey(res);
+            List<Record<K2,V2>> comRes = new LinkedList<>();
+            for (Map.Entry<K2,List<V2>> entry : groups.entrySet()){
+                comRes.add(combiner.reduce(entry.getKey(),entry.getValue()));
+            }
+
+            // partition
+            HashMap<Integer, List<Record<K2, V2>>> resPars = partition(comRes);
+            inteCache.put(number, resPars);
+        } else {
+            // partition
+            HashMap<Integer, List<Record<K2, V2>>> resPars = partition(res);
+            inteCache.put(number, resPars);
+        }
     }
 
     private void reduceTask(int number)
@@ -90,7 +106,7 @@ public class Driver<K1, V1, K2, V2, K3, V3>
         }
 
         // sort todo: group by 怎么实现比较好?
-        Collections.sort(data);
+        // Collections.sort(data);
         Map<K2, List<V2>> sortsData = new HashMap<>();
         for (Record<K2, V2> r : data) {
             if (sortsData.containsKey(r.getK())) {
@@ -104,23 +120,40 @@ public class Driver<K1, V1, K2, V2, K3, V3>
         }
 
         // reduce
-        List<V2> reduceRes = new LinkedList<>();
+        List<Record<K3,V3>> reduceRes = new LinkedList<>();
         for (Map.Entry<K2, List<V2>> entry : sortsData.entrySet()) {
-            reduceRes.addAll(reduce.reduce(entry.getKey(), entry.getValue()));
+            reduceRes.add(reducer.reduce(entry.getKey(), entry.getValue()));
         }
 
         // output to file
-        outputCache.put(number, reduceRes);
+        DataFormat<K1, V1, K3, V3> output = outputFormat.getInstance();
+        output.getRecordWriter().write(reduceRes);
+        outputCache.put(number,output);
+    }
+
+    private <K,V> HashMap<K, List<V>> groupByKey(List<Record<K,V>> res)
+    {
+        HashMap<K,List<V>> groups = new HashMap<>();
+
+        for(Record<K,V> r : res){
+            if(groups.getOrDefault(r.getK(),null) == null){
+                groups.put(r.getK(),new LinkedList<>(Collections.singletonList(r.getV())));
+            } else {
+                groups.get(r.getK()).add(r.getV());
+            }
+        }
+
+        return groups;
     }
 
     /**
      * @param mapRes
      * @return
      */
-    private HashMap<Integer, List<Record<K2, V2>>> partition(List<Record<K2, V2>> mapRes)
+    private <K,V> HashMap<Integer, List<Record<K, V>>> partition(List<Record<K, V>> mapRes)
     {
-        HashMap<Integer, List<Record<K2, V2>>> tmpFiles = new HashMap<>(reduces);
-        for (Record<K2, V2> r : mapRes) {
+        HashMap<Integer, List<Record<K, V>>> tmpFiles = new HashMap<>(reduces);
+        for (Record<K, V> r : mapRes) {
             int k = partitioner.getPartition(r.getK(), r.getV(), reduces);
             if (tmpFiles.containsKey(k)) {
                 tmpFiles.get(k).add(r);

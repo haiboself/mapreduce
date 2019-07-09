@@ -2,6 +2,9 @@ package dataformat;
 
 import java.io.IOException;
 
+/**
+ * 存储数据索引信息, {@link RecordReader} 根据数据索引信息读取数据
+ */
 public interface Partition
 {
     /**
@@ -20,5 +23,5 @@ public interface Partition
      * @throws IOException
      * @throws InterruptedException
      */
-    String[] getLocations() throws IOException, InterruptedException;
+    String[] getLocations();
 }

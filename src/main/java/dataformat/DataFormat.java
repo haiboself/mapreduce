@@ -21,5 +21,7 @@ public interface DataFormat<KIN,VIN,KOUT,VOUT>
 
     public RecordReader<KIN,VIN> getRecordReader(Partition p);
 
-    public RecordWriter<KOUT,VOUT> getRecordWriter(Conf conf);
+    public RecordWriter<KOUT,VOUT> getRecordWriter();
+
+    public DataFormat<KIN,VIN,KOUT,VOUT> getInstance();
 }

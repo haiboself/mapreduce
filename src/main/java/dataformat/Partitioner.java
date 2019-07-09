@@ -1,6 +1,6 @@
 package dataformat;
 
-public interface Partitioner<K2,V2>
+public interface Partitioner
 {
-    public int getPartition(K2 key, V2 value, int numPartitions);
+    public <K,V> int getPartition(K key, V value, int numPartitions);
 }
