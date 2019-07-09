@@ -35,7 +35,7 @@ public class WordCount
         @Override
         public Record<String, Integer> reduce(String k, List<Integer> vs)
         {
-            return new Record<>(k,vs.size());
+            return new Record<>(k,vs.stream().reduce(0,(a,b) -> a + b));
         }
     }
 
@@ -47,11 +47,10 @@ public class WordCount
         driver.setReducer(new IntSumReducer());
         driver.setCombiner(new IntSumReducer());
         driver.setReduces(3);
-        driver.setInputFormat(new StringInputFormat("a,b,c,d,e,f,g,a,a,a,b,c,d,d,g",","));
+        driver.setInputFormat(new StringInputFormat("a,b,c,d,e,f,a,a,a,a,g,a,a,a,b,c,d,d,g,af,f",","));
         driver.setOutputFormat(new StringInputFormat());
 
         HashMap<Integer,DataFormat<Integer,String,String,Integer>> res = driver.submit();
-        // todo: 结果不对
         for (DataFormat<Integer,String,String,Integer> f : res.values()){
             System.out.println(f);
         }
