@@ -1,28 +1,27 @@
 package dataformat;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
-import reducer.Reducer;
 import schedule.Conf;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-@AllArgsConstructor
 @NoArgsConstructor
 public class StringInputFormat implements DataFormat<Integer, String, String, Integer>
 {
     private String[] content;
     private final int blockSize = 2;
 
-    public StringInputFormat(String str, String delimiter){
-        content = str.split(delimiter);
+    private StringInputFormat(String[] content){
+        this.content = content;
+    }
+
+    public static StringInputFormat of(String str, String delimiter){
+        return new StringInputFormat(str.split(delimiter));
     }
 
     @Override
@@ -89,12 +88,6 @@ public class StringInputFormat implements DataFormat<Integer, String, String, In
                 content[index++] = r.getK() + " " + r.getV();
             }
         };
-    }
-
-    @Override
-    public DataFormat<Integer, String, String, Integer> getInstance()
-    {
-        return new StringInputFormat();
     }
 
     @Override

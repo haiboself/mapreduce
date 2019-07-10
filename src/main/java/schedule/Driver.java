@@ -1,26 +1,23 @@
 package schedule;
 
 import dataformat.DataFormat;
+import dataformat.HashPartition;
 import dataformat.Partition;
+import dataformat.Partitioner;
 import dataformat.Record;
 import dataformat.RecordReader;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import mapper.Mapper;
-import dataformat.HashPartition;
-import dataformat.Partitioner;
 import reducer.Reducer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.EventListener;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 
 @Data
 @NoArgsConstructor
@@ -38,7 +35,7 @@ public class Driver<K1, V1, K2, V2, K3, V3>
     private Reducer<K2, V2, K2, V2> combiner;
 
     private DataFormat<K1, V1, K3, V3> inputFormat;
-    private DataFormat<K1, V1, K3, V3> outputFormat;
+    private Class<? extends DataFormat<K1, V1, K3, V3>> outputFormat;
     private Partitioner partitioner = new HashPartition();
 
     /**
@@ -105,9 +102,8 @@ public class Driver<K1, V1, K2, V2, K3, V3>
             }
         }
 
-        // sort todo: group by 怎么实现比较好?
-        // Collections.sort(data);
-        Map<K2, List<V2>> sortsData = new HashMap<>();
+        // sort & group by
+        Map<K2, List<V2>> sortsData = new TreeMap<>();
         for (Record<K2, V2> r : data) {
             if (sortsData.containsKey(r.getK())) {
                 sortsData.get(r.getK()).add(r.getV());
@@ -122,13 +118,18 @@ public class Driver<K1, V1, K2, V2, K3, V3>
         // reduce
         List<Record<K3,V3>> reduceRes = new LinkedList<>();
         for (Map.Entry<K2, List<V2>> entry : sortsData.entrySet()) {
+            System.out.println(entry.getKey());
             reduceRes.add(reducer.reduce(entry.getKey(), entry.getValue()));
         }
 
         // output to file
-        DataFormat<K1, V1, K3, V3> output = outputFormat.getInstance();
-        output.getRecordWriter().write(reduceRes);
-        outputCache.put(number,output);
+        try {
+            DataFormat<K1, V1, K3, V3> output = outputFormat.newInstance();
+            output.getRecordWriter().write(reduceRes);
+            outputCache.put(number,output);
+        } catch (Exception e){
+            throw new RuntimeException(e);
+        }
     }
 
     private <K,V> HashMap<K, List<V>> groupByKey(List<Record<K,V>> res)

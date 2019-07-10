@@ -6,14 +6,9 @@ import dataformat.StringInputFormat;
 import schedule.Conf;
 import schedule.Driver;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author haibo
@@ -47,8 +42,8 @@ public class WordCount
         driver.setReducer(new IntSumReducer());
         driver.setCombiner(new IntSumReducer());
         driver.setReduces(3);
-        driver.setInputFormat(new StringInputFormat("a,b,c,d,e,f,a,a,a,a,g,a,a,a,b,c,d,d,g,af,f",","));
-        driver.setOutputFormat(new StringInputFormat());
+        driver.setInputFormat(StringInputFormat.of("a,b,c,d,e,f,a,a,a,a,g,a,a,a,b,c,d,d,g,af,f",","));
+        driver.setOutputFormat(StringInputFormat.class);
 
         HashMap<Integer,DataFormat<Integer,String,String,Integer>> res = driver.submit();
         for (DataFormat<Integer,String,String,Integer> f : res.values()){
