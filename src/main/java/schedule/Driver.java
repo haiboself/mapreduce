@@ -1,7 +1,8 @@
 package schedule;
 
-import dataformat.DataFormat;
 import dataformat.HashPartition;
+import dataformat.InputFormat;
+import dataformat.OutputFormat;
 import dataformat.Partition;
 import dataformat.Partitioner;
 import dataformat.Record;
@@ -21,7 +22,7 @@ import java.util.TreeMap;
 
 @Data
 @NoArgsConstructor
-public class Driver<K1, V1, K2, V2, K3, V3>
+public class Driver<K1, V1, K2 extends Comparable<K2>, V2, K3, V3>
 {
 
     private Conf conf;
@@ -34,17 +35,17 @@ public class Driver<K1, V1, K2, V2, K3, V3>
     private Reducer<K2, V2, K3, V3> reducer;
     private Reducer<K2, V2, K2, V2> combiner;
 
-    private DataFormat<K1, V1, K3, V3> inputFormat;
-    private Class<? extends DataFormat> outputFormat;
+    private InputFormat<K1, V1> inputFormat;
+    private OutputFormat<K3,V3> outputFormat;
     private Partitioner partitioner = new HashPartition();
 
     /**
      * cache map outputs
      */
     private HashMap<Integer, HashMap<Integer, List<Record<K2,V2>>>> inteCache = new HashMap<>(reduces);
-    private HashMap<Integer, DataFormat<K1, V1, K3, V3>> outputCache = new HashMap<>(reduces);
+    private HashMap<Integer, OutputFormat<K3, V3>> outputCache = new HashMap<>(reduces);
 
-    public HashMap<Integer, DataFormat<K1, V1, K3, V3>> submit()
+    public HashMap<Integer, OutputFormat<K3, V3>> submit()
     {
         Objects.requireNonNull(mapper);
         Objects.requireNonNull(reducer);
@@ -123,7 +124,7 @@ public class Driver<K1, V1, K2, V2, K3, V3>
 
         // output to file
         try {
-            DataFormat<K1, V1, K3, V3> output = outputFormat.newInstance();
+            OutputFormat<K3, V3> output = outputFormat.getClass().newInstance();
             output.getRecordWriter().write(reduceRes);
             outputCache.put(number,output);
         } catch (Exception e){

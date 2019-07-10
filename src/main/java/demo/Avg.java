@@ -1,8 +1,9 @@
 package demo;
 
-import dataformat.DataFormat;
+import dataformat.OutputFormat;
 import dataformat.Record;
 import dataformat.StringInputFormat;
+import dataformat.StringOutputFormat;
 import schedule.Conf;
 import schedule.Driver;
 
@@ -43,10 +44,10 @@ public class Avg
         driver.setCombiner(new AvgReducer());
         driver.setReduces(1);
         driver.setInputFormat(StringInputFormat.of("1,2,3,4,5,6,7,8,9,10",","));
-        driver.setOutputFormat(StringInputFormat.class);
+        driver.setOutputFormat(new StringOutputFormat<>());
 
-        HashMap<Integer, DataFormat<Integer,String,String,Double>> res = driver.submit();
-        for (DataFormat<Integer,String,String,Double> f : res.values()){
+        HashMap<Integer, OutputFormat<String,Double>> res = driver.submit();
+        for (OutputFormat<String,Double> f : res.values()){
             System.out.println(f);
         }
     }

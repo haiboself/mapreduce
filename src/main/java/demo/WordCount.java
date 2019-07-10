@@ -1,8 +1,9 @@
 package demo;
 
-import dataformat.DataFormat;
+import dataformat.OutputFormat;
 import dataformat.Record;
 import dataformat.StringInputFormat;
+import dataformat.StringOutputFormat;
 import schedule.Conf;
 import schedule.Driver;
 
@@ -43,10 +44,10 @@ public class WordCount
         driver.setCombiner(new IntSumReducer());
         driver.setReduces(3);
         driver.setInputFormat(StringInputFormat.of("a,b,c,d,e,f,a,a,a,a,g,a,a,a,b,c,d,d,g,af,f",","));
-        driver.setOutputFormat(StringInputFormat.class);
+        driver.setOutputFormat(new StringOutputFormat<>());
 
-        HashMap<Integer,DataFormat<Integer,String,String,Integer>> res = driver.submit();
-        for (DataFormat<Integer,String,String,Integer> f : res.values()){
+        HashMap<Integer, OutputFormat<String,Integer>> res = driver.submit();
+        for (OutputFormat<String,Integer> f : res.values()){
             System.out.println(f);
         }
     }

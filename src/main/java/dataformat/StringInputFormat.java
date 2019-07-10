@@ -7,11 +7,16 @@ import schedule.Conf;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * @author haibo
+ */
 @NoArgsConstructor
-public class StringInputFormat<VOUT> implements DataFormat<Integer,String,String,VOUT>
+public class StringInputFormat implements InputFormat<Integer,String>
 {
     private String[] content;
     private final int blockSize = 2;
@@ -22,6 +27,16 @@ public class StringInputFormat<VOUT> implements DataFormat<Integer,String,String
 
     public static StringInputFormat of(String str, String delimiter){
         return new StringInputFormat(str.split(delimiter));
+    }
+
+    public static <K,V> InputFormat<Integer, String> of(Collection<OutputFormat<K, V>> data)
+    {
+        List<String> contents = new LinkedList<>();
+        for(OutputFormat out : data){
+            contents.addAll(Arrays.asList(((StringOutputFormat)out).getContent()));
+        }
+
+        return new StringInputFormat(contents.toArray(new String[0]));
     }
 
     @Override
@@ -76,23 +91,6 @@ public class StringInputFormat<VOUT> implements DataFormat<Integer,String,String
                 return content[index];
             }
         };
-    }
-
-    @Override
-    public RecordWriter<String, VOUT> getRecordWriter()
-    {
-        return res -> {
-            content = new String[res.size()];
-            int index = 0;
-            for (Record<String,VOUT> r : res){
-                content[index++] = r.getK() + " " + r.getV();
-            }
-        };
-    }
-
-    @Override
-    public String toString(){
-        return Arrays.toString(content);
     }
 }
 
