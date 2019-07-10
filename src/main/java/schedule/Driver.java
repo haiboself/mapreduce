@@ -35,7 +35,7 @@ public class Driver<K1, V1, K2, V2, K3, V3>
     private Reducer<K2, V2, K2, V2> combiner;
 
     private DataFormat<K1, V1, K3, V3> inputFormat;
-    private Class<? extends DataFormat<K1, V1, K3, V3>> outputFormat;
+    private Class<? extends DataFormat> outputFormat;
     private Partitioner partitioner = new HashPartition();
 
     /**
@@ -118,7 +118,6 @@ public class Driver<K1, V1, K2, V2, K3, V3>
         // reduce
         List<Record<K3,V3>> reduceRes = new LinkedList<>();
         for (Map.Entry<K2, List<V2>> entry : sortsData.entrySet()) {
-            System.out.println(entry.getKey());
             reduceRes.add(reducer.reduce(entry.getKey(), entry.getValue()));
         }
 

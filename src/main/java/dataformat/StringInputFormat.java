@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Objects;
 
 @NoArgsConstructor
-public class StringInputFormat implements DataFormat<Integer, String, String, Integer>
+public class StringInputFormat<VOUT> implements DataFormat<Integer,String,String,VOUT>
 {
     private String[] content;
     private final int blockSize = 2;
@@ -79,12 +79,12 @@ public class StringInputFormat implements DataFormat<Integer, String, String, In
     }
 
     @Override
-    public RecordWriter<String, Integer> getRecordWriter()
+    public RecordWriter<String, VOUT> getRecordWriter()
     {
         return res -> {
             content = new String[res.size()];
             int index = 0;
-            for (Record<String,Integer> r : res){
+            for (Record<String,VOUT> r : res){
                 content[index++] = r.getK() + " " + r.getV();
             }
         };
