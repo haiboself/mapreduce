@@ -7,6 +7,6 @@ public class HashPartition implements Partitioner
     @Override
     public <K,V> int getPartition(K key, V value, int numPartitions)
     {
-        return Objects.hashCode(key) % numPartitions;
+        return Math.abs(Objects.hashCode(key) % numPartitions);
     }
 }
