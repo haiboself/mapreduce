@@ -2,10 +2,10 @@ package dataformat;
 
 import java.util.Objects;
 
-public class HashPartition implements Partitioner
+public class HashPartition<K,V> implements Partitioner<K,V>
 {
     @Override
-    public <K,V> int getPartition(K key, V value, int numPartitions)
+    public int getPartition(K key, V value, int numPartitions)
     {
         return Math.abs(Objects.hashCode(key) % numPartitions);
     }
