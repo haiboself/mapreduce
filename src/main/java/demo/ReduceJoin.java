@@ -84,6 +84,7 @@ public class ReduceJoin
 
         HashMap<Integer, OutputFormat<String, List<String>>> res = driver.submit();
 
+        System.out.println("T1.id,T1.lower,T2.id,T2.upper join on T1.id = T2.id");
         System.out.println(res.values().stream()
                 .map(o -> ((StringOutputFormat)o).getContent())
                 .map(c -> Arrays.stream(c).filter(x -> x.length() > 2).map(x -> Arrays.stream(x.split(",")).map(String::trim).collect(Collectors.joining("\n"))))
