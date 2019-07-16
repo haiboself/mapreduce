@@ -65,12 +65,71 @@ public class ReduceJoin
         }
     }
 
-    public static void main(String[] args)
+    static class LeftJoinReducer extends reducer.Reducer<String, Record<String,String>, String, List<String>>
     {
-        join();
+        @Override
+        public Record<String, List<String>> reduce(String k, List<Record<String, String>> vs)
+        {
+            List<String> res = new LinkedList<>();
+            List<String> t1s = vs.stream().filter(r -> "T1".equals(r.getK())).map(Record::getV).collect(Collectors.toList());
+
+            if(t1s.size() == vs.size()){
+                for(Record<String,String> r : vs){
+                    res.add(r.getV() + " _ _");
+                }
+            } else {
+                for (Record<String, String> r : vs) {
+                    if ("T2".equals(r.getK())) {
+                        for (String a : t1s) {
+                            res.add(a + " " + r.getV());
+                        }
+                    }
+                }
+            }
+
+            return new Record<>(k,res);
+        }
     }
 
-    private static void join()
+    static class RightJoinReducer extends reducer.Reducer<String, Record<String, String>, String, List<String>>
+    {
+        @Override
+        public Record<String, List<String>> reduce(String k, List<Record<String, String>> vs)
+        {
+            List<String> res = new LinkedList<>();
+            List<String> t1s = vs.stream().filter(r -> "T1".equals(r.getK())).map(Record::getV).collect(Collectors.toList());
+
+            if(t1s.size() == 0){
+                for(Record<String,String> r : vs){
+                    res.add("_ _ " + r.getV());
+                }
+            } else {
+                for (Record<String, String> r : vs) {
+                    if ("T2".equals(r.getK())) {
+                        for (String a : t1s) {
+                            res.add(a + " " + r.getV());
+                        }
+                    }
+                }
+            }
+
+            return new Record<>(k, res);
+        }
+    }
+
+    public static void main(String[] args)
+    {
+        System.out.println("T1.id,T1.lower,T2.id,T2.upper join on T1.id = T2.id");
+        innerJoin();
+
+        System.out.println("\nT1.id,T1.lower,T2.id,T2.upper left join on T1.id = T2.id");
+        leftJoin();
+
+        System.out.println("\nT1.id,T1.lower,T2.id,T2.upper right join on T1.id = T2.id");
+        rightJoin();
+    }
+
+    private static void innerJoin()
     {
         MultiInputDriver<Integer, String, String, Record<String,String>, String, List<String>> driver = new MultiInputDriver<>();
         driver.setConf(new Conf());
@@ -84,7 +143,48 @@ public class ReduceJoin
 
         HashMap<Integer, OutputFormat<String, List<String>>> res = driver.submit();
 
-        System.out.println("T1.id,T1.lower,T2.id,T2.upper join on T1.id = T2.id");
+        System.out.println(res.values().stream()
+                .map(o -> ((StringOutputFormat)o).getContent())
+                .map(c -> Arrays.stream(c).filter(x -> x.length() > 2).map(x -> Arrays.stream(x.split(",")).map(String::trim).collect(Collectors.joining("\n"))))
+                .map(c -> c.map(x -> x.replace("[","").replace("]","").trim()))
+                .map(c -> c.collect(Collectors.joining("\n")))
+                .collect(Collectors.joining("\n")));
+    }
+
+    private static void leftJoin(){
+        MultiInputDriver<Integer, String, String, Record<String,String>, String, List<String>> driver = new MultiInputDriver<>();
+        driver.setConf(new Conf());
+
+        driver.addMapper(new JoinAMapper(), StringInputFormat.of("6 f,1 a,1 a,2 b,4 d,5 e,0 h", ","));
+        driver.addMapper(new JoinBMapper(), StringInputFormat.of("1 A,2 B,2 B,3 C,4 D,5 E,6 F", ","));
+
+        driver.setReducer(new LeftJoinReducer());
+        driver.setReduces(2);
+        driver.setOutputFormat(new StringOutputFormat<>());
+
+        HashMap<Integer, OutputFormat<String, List<String>>> res = driver.submit();
+
+        System.out.println(res.values().stream()
+                .map(o -> ((StringOutputFormat)o).getContent())
+                .map(c -> Arrays.stream(c).filter(x -> x.length() > 2).map(x -> Arrays.stream(x.split(",")).map(String::trim).collect(Collectors.joining("\n"))))
+                .map(c -> c.map(x -> x.replace("[","").replace("]","").trim()))
+                .map(c -> c.collect(Collectors.joining("\n")))
+                .collect(Collectors.joining("\n")));
+    }
+
+    private static void rightJoin(){
+        MultiInputDriver<Integer, String, String, Record<String,String>, String, List<String>> driver = new MultiInputDriver<>();
+        driver.setConf(new Conf());
+
+        driver.addMapper(new JoinAMapper(), StringInputFormat.of("6 f,1 a,1 a,2 b,4 d,5 e,0 h", ","));
+        driver.addMapper(new JoinBMapper(), StringInputFormat.of("1 A,2 B,2 B,3 C,4 D,5 E,6 F", ","));
+
+        driver.setReducer(new RightJoinReducer());
+        driver.setReduces(2);
+        driver.setOutputFormat(new StringOutputFormat<>());
+
+        HashMap<Integer, OutputFormat<String, List<String>>> res = driver.submit();
+
         System.out.println(res.values().stream()
                 .map(o -> ((StringOutputFormat)o).getContent())
                 .map(c -> Arrays.stream(c).filter(x -> x.length() > 2).map(x -> Arrays.stream(x.split(",")).map(String::trim).collect(Collectors.joining("\n"))))
