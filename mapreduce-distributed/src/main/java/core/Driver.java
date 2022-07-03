@@ -2,7 +2,10 @@ package core;
 
 import com.typesafe.config.Config;
 import core.dataformat.DataFormat;
+import core.dataformat.Split;
+import res.Output;
 import res.ResClient;
+import res.TaskStatus;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -26,27 +29,22 @@ public class Driver {
        // map stage
        List<String> mapTasks = new LinkedList<>();
        for(Split split : inputFormat.getSplits()){
-           String mapId = resClient.submit(new MapTask(split)).get();
-           mapTasks.add(taskId);
+           String mapTaskId = resClient.submit(new MapTask(split));
+           mapTasks.add(mapTaskId);
        }
 
        // waiting for map finished
        while (true) {
            for (String mapId : mapTasks) {
                TaskStatus status = resClient.getStatus(mapId);
-               if (status.isFail) {
-                   retry;
-               } else if(status.isSuccess){
+               if (status.isFail()) {
+               } else if(status.isSuccess()){
                    Output output = resClient.getOuput(mapId);
                }
            }
        }
 
        // reduce stage
-        List<String> reduceTasks = new LinkedList<>();
-       for(int i = 0; i < reducerNum; i++){
-           String reduceId = resClient.submit(new ReduceTask(i, output));
-       }
 
        // waiting for map finished
     }
