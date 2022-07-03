@@ -18,6 +18,7 @@
     <modules>
         <module>mapreduce-onyarn</module>
         <module>mapreduce-standalone</module>
+        <module>mapreduce-distributed</module>
     </modules>
 
     <dependencyManagement>
@@ -27,6 +28,7 @@
                 <artifactId>lombok</artifactId>
                 <version>1.18.8</version>
             </dependency>
+
         </dependencies>
     </dependencyManagement>
 
