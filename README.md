@@ -19,3 +19,11 @@ mapreduce-standalone/
 
 ## On Yarn
 ing...
+
+## Distributed
+doing
+
+主要分2块:
+1. DriverScheduler: 是mapreduce框架,负责调度map和reduce 2个阶段
+2. RSM: 类似资源管理,采用Akka Cluster实现,负责调度和具体执行mapTask和ReduceTask的逻辑
+![image](./artich.jpg)
