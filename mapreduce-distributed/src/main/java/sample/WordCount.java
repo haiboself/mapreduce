@@ -6,7 +6,11 @@ import core.Mapper;
 import core.Reducer;
 import core.dataformat.KvPair;
 import core.dataformat.LocalTextFileFormat;
+import org.apache.commons.io.FileUtils;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 
@@ -35,8 +39,16 @@ public class WordCount {
         }
     }
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) throws IOException {
+        // test data
+        String path = "/tmp/test_input_files";
+        FileUtils.cleanDirectory(new File(path));
+        FileUtils.cleanDirectory(new File("/tmp/test_output_files"));
+        FileUtils.writeLines(new File(path + "/1.txt"), Arrays.asList("a,b,c,d,e,f,a,a,a".split(",")));
+        FileUtils.writeLines(new File(path + "/2.txt"), Arrays.asList("x,b,c,ddd,d".split(",")));
+        FileUtils.writeLines(new File(path + "/3.txt"), Arrays.asList("a,x".split(",")));
+
+
         Driver<Integer, String, String, Integer, String, Integer> driver = new Driver<>();
         driver.setConf(ConfigFactory.parseMap(new HashMap<String, Object>(){{
             put("partitioner.class", "default");
@@ -47,11 +59,11 @@ public class WordCount {
 
         driver.setReducer(new IntSumReducer());
         driver.setOutputFormat(new LocalTextFileFormat("/tmp/test_output_files"));
-        driver.setReducerNum(10);
+        driver.setReducerNum(1);
 
         driver.submit();
         new LocalTextFileFormat("/tmp/test_output_files").getSplits().forEach(split -> {
-            split.iterator().forEachRemaining(System.out::println);
+            split.iterator().forEachRemaining(pair -> System.out.println(pair.getV()));
         });
     }
 

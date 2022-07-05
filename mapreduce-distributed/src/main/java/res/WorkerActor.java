@@ -10,8 +10,14 @@ import akka.cluster.ClusterEvent;
 import akka.cluster.typed.Cluster;
 import akka.cluster.typed.Subscribe;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import core.JacksonUtil;
+import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 
+import java.io.File;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -39,6 +45,7 @@ public class WorkerActor extends AbstractBehavior<WorkerActor.WorkerEvent> {
     }
 
     private final Logger logger = getContext().getLog();
+    private Config config = ConfigFactory.load();
     public static final ServiceKey<WorkerEvent> SERVICE_KEY = ServiceKey.create(WorkerEvent.class, "worker");
     private final ExecutorService slots = Executors.newFixedThreadPool(10);
 
@@ -75,8 +82,8 @@ public class WorkerActor extends AbstractBehavior<WorkerActor.WorkerEvent> {
         CompletableFuture.supplyAsync(task::run, slots)
                 .thenAccept(r -> {
                     logger.info("success task {}", task.getTaskId());
+                    saveTaskOutput(task, r);
                     updateTaskStatus(task, TaskStatus.Success);
-                    saveTaskOutput(r);
                 })
                 .exceptionally(e -> {
                     logger.info("fail task {}", task.getTaskId(), e);
@@ -87,9 +94,17 @@ public class WorkerActor extends AbstractBehavior<WorkerActor.WorkerEvent> {
         return this;
     }
 
-    private void saveTaskOutput(Output r) {
+    @SneakyThrows
+    private void saveTaskOutput(ResTask task, Output output) {
+        String path = config.getString("res.task.info.baseDir")  + "/" + task.getTaskId() + "/output.txt";
+        FileUtils.writeStringToFile(new File(path), JacksonUtil.toJsonString(output));
+        logger.info("save task {} output in {}", task.getTaskId(), path);
     }
 
-    private void updateTaskStatus(ResTask task, TaskStatus run) {
+    @SneakyThrows
+    private void updateTaskStatus(ResTask task, TaskStatus status) {
+        String path = config.getString("res.task.info.baseDir")  + "/" + task.getTaskId() + "/status.txt";
+        FileUtils.writeStringToFile(new File(path), JacksonUtil.toJsonString(status));
+        logger.info("save task {} status in {}", task.getTaskId(), path);
     }
 }

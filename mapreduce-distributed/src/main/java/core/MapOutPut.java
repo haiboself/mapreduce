@@ -1,14 +1,16 @@
 package core;
 
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import res.Output;
 
 import java.io.File;
 
+@Data
+@NoArgsConstructor
 public class MapOutPut implements Output {
 
     // local file path
-    @Getter
     private String[] tmpFiles;
     private MapOutPut(String[] tmpFiles){
         this.tmpFiles = tmpFiles;

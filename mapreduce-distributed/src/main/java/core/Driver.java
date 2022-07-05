@@ -6,11 +6,15 @@ import core.dataformat.DataFormat;
 import core.dataformat.Split;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import res.ResClient;
+import res.TaskStatus;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+@Slf4j
 @Setter
 public class Driver<K1,V1,K2,V2,K3,V3>  {
 
@@ -42,6 +46,7 @@ public class Driver<K1,V1,K2,V2,K3,V3>  {
     public void submit(){
 
        // map stage
+       log.info("start map stage====================");
        List<String> mapTasks = new LinkedList<>();
        for(Split split : inputFormat.getSplits()){
            String mapTaskId = resClient.submit(new MapTask<>(mapper, split, reducerNum)).get();
@@ -49,18 +54,49 @@ public class Driver<K1,V1,K2,V2,K3,V3>  {
        }
 
        // waiting for map finished
-//       while (true) {
-//           for (String mapId : mapTasks) {
-//               TaskStatus status = resClient.getStatus(mapId);
-//               if (status.isFail()) {
-//               } else if(status.isSuccess()){
-//                   Output output = resClient.getOuput(mapId);
-//               }
-//           }
-//       }
+       List<MapOutPut> mapOutPuts = new LinkedList<>();
+       while (!mapTasks.isEmpty()) {
+           Iterator<String> iterator = mapTasks.iterator();
+           while (iterator.hasNext()){
+               String mapId = iterator.next();
+               TaskStatus status = resClient.getStatus(mapId);
+               if (status.isFail()) {
+                   log.info("reduce {} fail", mapId);
+                   iterator.remove();
+               } else if(status.isSuccess()){
+                   log.info("reduce {} success", mapId);
+                   iterator.remove();
+                   MapOutPut output = resClient.getOutput(mapId, MapOutPut.class).get();
+                   mapOutPuts.add(output);
+               }
+           }
+       }
+       log.info("end map stage====================");
 
        // reduce stage
+        log.info("start reduce stage====================");
+        List<String> reduceTasks = new LinkedList<>();
+       for(int i = 0; i < reducerNum; i++){
+           String reduceTaskId = resClient.submit(new ReduceTask<>(i, reducer, mapOutPuts, outputFormat)).get();
+           reduceTasks.add(reduceTaskId);
+       }
 
        // waiting for  finished
+        while (!reduceTasks.isEmpty()) {
+            Iterator<String> iterator = reduceTasks.iterator();
+            while (iterator.hasNext()){
+                String reduceId = iterator.next();
+                TaskStatus status = resClient.getStatus(reduceId);
+                if (status.isFail()) {
+                    log.info("map {} fail", reduceId);
+                    iterator.remove();
+                } else if(status.isSuccess()){
+                    log.info("map {} success", reduceId);
+                    iterator.remove();
+                }
+            }
+        }
+
+        log.info("end reduce stage====================");
     }
 }

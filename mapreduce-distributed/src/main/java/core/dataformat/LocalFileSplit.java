@@ -7,7 +7,6 @@ import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,10 +25,7 @@ public class LocalFileSplit extends Split {
         List<KvPair<K1, V1>> res = new LinkedList<>();
         AtomicInteger index = new AtomicInteger();
         FileUtils.readLines(file).forEach(line -> {
-
-            Arrays.stream(line.split(",")).forEach(word -> {
-                res.add(new KvPair(index.getAndIncrement(), word));
-            });
+            res.add(new KvPair(index.getAndIncrement(), line));
         });
 
         return res.iterator();

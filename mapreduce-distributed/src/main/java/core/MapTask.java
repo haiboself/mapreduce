@@ -11,6 +11,7 @@ import res.ResTask;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class MapTask<K1, V1, K2, V2> extends ResTask {
 
@@ -45,6 +46,7 @@ public class MapTask<K1, V1, K2, V2> extends ResTask {
     }
 
     @Override
+    @SneakyThrows
     public MapOutPut run() {
         init();
         List<Iterable<KvPair<K2, V2>> > middleOutputs = new LinkedList<>();
@@ -55,6 +57,7 @@ public class MapTask<K1, V1, K2, V2> extends ResTask {
 
         middleOutputs.forEach(output -> output.forEach(this::partitionForShuffle));
 
+        TimeUnit.SECONDS.sleep(3);
         return MapOutPut.fromFiles(spillFiles);
     }
 
@@ -64,7 +67,6 @@ public class MapTask<K1, V1, K2, V2> extends ResTask {
 
         int partitionNum = partitioner.getPartition(kvPair.getK(), kvPair.getV(), reduceNumns);
         FileUtils.writeLines(
-                spillFiles[partitionNum], Collections.singleton(kvPair.toString()), true
-        );
+                spillFiles[partitionNum], Collections.singleton(JacksonUtil.toJsonString(kvPair)), true);
     }
 }

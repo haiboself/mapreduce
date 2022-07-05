@@ -4,10 +4,14 @@ public enum TaskStatus {
     Run, Success, Fail;
 
     public boolean isFail() {
-        return true;
+        return this == Fail;
     }
 
     public boolean isSuccess() {
-        return true;
+        return this == Success;
+    }
+
+    public boolean isRunning() {
+        return this == Run;
     }
 }
