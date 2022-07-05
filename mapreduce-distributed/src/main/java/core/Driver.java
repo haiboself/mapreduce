@@ -44,7 +44,7 @@ public class Driver<K1,V1,K2,V2,K3,V3>  {
        // map stage
        List<String> mapTasks = new LinkedList<>();
        for(Split split : inputFormat.getSplits()){
-           String mapTaskId = resClient.submit(new MapTask<>(mapper, split)).get();
+           String mapTaskId = resClient.submit(new MapTask<>(mapper, split, reducerNum)).get();
            mapTasks.add(mapTaskId);
        }
 

@@ -23,18 +23,30 @@ public class MapTask<K1, V1, K2, V2> extends ResTask {
     private File[] spillFiles;
 
     @JsonCreator
-    public MapTask(Mapper<K1, V1, K2, V2> mapper, Split split) {
+    public MapTask(Mapper<K1, V1, K2, V2> mapper, Split split, int reduceNumns) {
         this.mapper = mapper;
         this.split = split;
+        this.reduceNumns = reduceNumns;
     }
 
 
     @Override
     public void init() {
+        this.spillFiles = new File[this.reduceNumns];
+        for (int i = 0; i < this.spillFiles.length; i++) {
+            this.spillFiles[i] = new File("/tmp/maptask/" + this.getTaskId() + "/" + i + ".txt");
+        }
+        this.partitioner = new Partitioner() {
+            @Override
+            public <K, V> int getPartition(K key, V value, int numPartitions) {
+                return Math.abs(Objects.hashCode(key) % numPartitions);
+            }
+        };
     }
 
     @Override
     public MapOutPut run() {
+        init();
         List<Iterable<KvPair<K2, V2>> > middleOutputs = new LinkedList<>();
         Iterator<KvPair<K1,V1>> iterator = split.iterator();
         iterator.forEachRemaining(kvInput ->

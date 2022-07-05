@@ -6,5 +6,5 @@ import java.util.Iterator;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
 public abstract class Split {
-    public abstract <V1, K1> Iterator<KvPair<K1,V1>> iterator();
+    public abstract <K1,V1> Iterator<KvPair<K1, V1>> iterator();
 }
