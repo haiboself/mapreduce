@@ -1,4 +1,4 @@
 package res;
 
-public class Output {
+public interface Output {
 }

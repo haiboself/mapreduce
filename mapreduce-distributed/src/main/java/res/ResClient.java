@@ -1,16 +1,29 @@
 package res;
 
 
-import akka.actor.typed.ActorRef;
+import io.vavr.control.Try;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
+
+@AllArgsConstructor
+@Slf4j
 public class ResClient {
-    private ActorRef<MasterActor.MasterEvent> masterActor;
+    private BlockingDeque<ResTask> queue;
 
-    public ResClient(){
+    public static ResClient create(){
+        BlockingDeque<ResTask> queue = new LinkedBlockingDeque<>();
+        ResClient resClient = new ResClient(queue);
+        Starter.startLocalMaster(8888, queue);
+
+        return resClient;
     }
 
-    public String submit(ResTask mapTask) {
-        return null;
+    public Try<String> submit(ResTask task) {
+        log.info("submit task {}", task.getTaskId());
+        return Try.of(() -> queue.offer(task)).map(r -> task.getTaskId());
     }
 
     public TaskStatus getStatus(String mapId) {

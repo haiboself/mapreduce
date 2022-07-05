@@ -1,6 +1,8 @@
 package res;
 
-public class TaskStatus {
+public enum TaskStatus {
+    Run, Success, Fail;
+
     public boolean isFail() {
         return true;
     }

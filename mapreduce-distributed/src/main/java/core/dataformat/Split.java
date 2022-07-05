@@ -1,4 +1,10 @@
 package core.dataformat;
 
-public class Split {
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+import java.util.Iterator;
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
+public abstract class Split {
+    public abstract <V1, K1> Iterator<KvPair<K1,V1>> iterator();
 }

@@ -1,6 +1,6 @@
 package res;
 
-public class S {
+public class StartWorker {
 
     public static void main(String[] args) {
         Starter.startLocalWorker(8887);

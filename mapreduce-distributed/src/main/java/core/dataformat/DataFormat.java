@@ -1,5 +1,7 @@
 package core.dataformat;
 
+import java.util.List;
+
 public interface DataFormat {
-    Split[] getSplits();
+    List<Split> getSplits();
 }

@@ -9,6 +9,12 @@ import akka.actor.typed.receptionist.ServiceKey;
 import akka.cluster.ClusterEvent;
 import akka.cluster.typed.Cluster;
 import akka.cluster.typed.Subscribe;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import org.slf4j.Logger;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class WorkerActor extends AbstractBehavior<WorkerActor.WorkerEvent> {
 
@@ -21,7 +27,20 @@ public class WorkerActor extends AbstractBehavior<WorkerActor.WorkerEvent> {
         }
     }
 
+    public static final class StartTask implements WorkerEvent {
+        public ActorRef<MasterActor.MasterEvent> master;
+        public ResTask resTask;
+
+        @JsonCreator
+        public StartTask(ActorRef<MasterActor.MasterEvent> master, ResTask resTask){
+            this.master = master;
+            this.resTask = resTask;
+        }
+    }
+
+    private final Logger logger = getContext().getLog();
     public static final ServiceKey<WorkerEvent> SERVICE_KEY = ServiceKey.create(WorkerEvent.class, "worker");
+    private final ExecutorService slots = Executors.newFixedThreadPool(10);
 
     private WorkerActor(ActorContext<WorkerEvent> context, TimerScheduler<WorkerEvent> timers) {
         super(context);
@@ -44,6 +63,33 @@ public class WorkerActor extends AbstractBehavior<WorkerActor.WorkerEvent> {
 
     @Override
     public Receive<WorkerEvent> createReceive() {
-        return newReceiveBuilder().build();
+        return newReceiveBuilder()
+                .onMessage(StartTask.class, s -> this.startTask(s.resTask))
+                .build();
+    }
+
+    private Behavior<WorkerEvent> startTask(ResTask task) {
+        logger.info("run task {}", task.getTaskId());
+        updateTaskStatus(task, TaskStatus.Run);
+
+        CompletableFuture.supplyAsync(task::run, slots)
+                .thenAccept(r -> {
+                    logger.info("success task {}", task.getTaskId());
+                    updateTaskStatus(task, TaskStatus.Success);
+                    saveTaskOutput(r);
+                })
+                .exceptionally(e -> {
+                    logger.info("fail task {}", task.getTaskId(), e);
+                    updateTaskStatus(task, TaskStatus.Fail);
+                    return null;
+                });
+
+        return this;
+    }
+
+    private void saveTaskOutput(Output r) {
+    }
+
+    private void updateTaskStatus(ResTask task, TaskStatus run) {
     }
 }

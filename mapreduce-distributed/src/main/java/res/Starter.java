@@ -9,16 +9,17 @@ import com.typesafe.config.ConfigFactory;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 
 public class Starter {
     public static void main(String[] args) {
-        startLocalMaster(8888);
+        startLocalMaster(8888, new LinkedBlockingDeque<>());
         // startLocalWorker(8887);
         // startLocalWorker(8886);
     }
 
-
-    static void startLocalMaster(int port){
+    public static void startLocalMaster(int port, BlockingDeque<ResTask> queue) {
         Map<String,Object> overrides = new HashMap<>();
         overrides.put("akka.remote.artery.canonical.port", port);
         overrides.put("akka.cluster.roles", Collections.singleton("master"));
@@ -27,7 +28,7 @@ public class Starter {
         Config config = ConfigFactory.parseMap(overrides).withFallback(ConfigFactory.load());
 
         ActorSystem<Void> system = ActorSystem.create(Behaviors.setup(context -> {
-            context.spawn(MasterActor.create(), "master");
+            context.spawn(MasterActor.create(queue), "master");
             return Behaviors.empty();
         }), "ClusterSystem", config);
     }
