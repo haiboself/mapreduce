@@ -1,4 +1,4 @@
-package res;
+package rsm;
 
 public interface CborSerializable {
 }

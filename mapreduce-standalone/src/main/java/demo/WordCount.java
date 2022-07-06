@@ -19,7 +19,6 @@ public class WordCount
 
     static class TokenizerMapper extends mapper.Mapper<Integer, String, String, Integer>
     {
-
         @Override
         public List<Record<String, Integer>> map(Integer k, String v)
         {

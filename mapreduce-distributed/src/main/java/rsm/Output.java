@@ -1,4 +1,4 @@
-package res;
+package rsm;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 

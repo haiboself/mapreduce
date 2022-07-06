@@ -6,6 +6,7 @@ import core.Mapper;
 import core.Reducer;
 import core.dataformat.KvPair;
 import core.dataformat.LocalTextFileFormat;
+import io.vavr.control.Try;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -41,12 +42,14 @@ public class WordCount {
 
     public static void main(String[] args) throws IOException {
         // test data
-        String path = "/tmp/test_input_files";
-        FileUtils.cleanDirectory(new File(path));
-        FileUtils.cleanDirectory(new File("/tmp/test_output_files"));
-        FileUtils.writeLines(new File(path + "/1.txt"), Arrays.asList("a,b,c,d,e,f,a,a,a".split(",")));
-        FileUtils.writeLines(new File(path + "/2.txt"), Arrays.asList("x,b,c,ddd,d".split(",")));
-        FileUtils.writeLines(new File(path + "/3.txt"), Arrays.asList("a,x".split(",")));
+        String inputPath = "/tmp/test_input_files";
+        String outputPath = "/tmp/test_output_files";
+        Try.run(() -> FileUtils.cleanDirectory(new File(inputPath)));
+        Try.run(() -> FileUtils.cleanDirectory(new File(outputPath)));
+
+        FileUtils.writeLines(new File(inputPath + "/1.txt"), Arrays.asList("a,b,c,d,e,f,a,a,a".split(",")));
+        FileUtils.writeLines(new File(inputPath + "/2.txt"), Arrays.asList("x,b,c,ddd,d".split(",")));
+        FileUtils.writeLines(new File(inputPath + "/3.txt"), Arrays.asList("a,x".split(",")));
 
 
         Driver<Integer, String, String, Integer, String, Integer> driver = new Driver<>();
@@ -55,14 +58,14 @@ public class WordCount {
         }}));
 
         driver.setMapper(new TokenizerMapper());
-        driver.setInputFormat(new LocalTextFileFormat("/tmp/test_input_files"));
+        driver.setInputFormat(new LocalTextFileFormat(inputPath));
 
         driver.setReducer(new IntSumReducer());
-        driver.setOutputFormat(new LocalTextFileFormat("/tmp/test_output_files"));
-        driver.setReducerNum(1);
+        driver.setOutputFormat(new LocalTextFileFormat(outputPath));
+        driver.setReducerNum(5);
 
         driver.submit();
-        new LocalTextFileFormat("/tmp/test_output_files").getSplits().forEach(split -> {
+        new LocalTextFileFormat(outputPath).getSplits().forEach(split -> {
             split.iterator().forEachRemaining(pair -> System.out.println(pair.getV()));
         });
     }

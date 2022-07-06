@@ -2,7 +2,7 @@ package core;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import res.Output;
+import rsm.Output;
 
 import java.io.File;
 

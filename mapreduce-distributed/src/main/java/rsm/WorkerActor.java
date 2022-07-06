@@ -1,4 +1,4 @@
-package res;
+package rsm;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
@@ -76,17 +76,17 @@ public class WorkerActor extends AbstractBehavior<WorkerActor.WorkerEvent> {
     }
 
     private Behavior<WorkerEvent> startTask(ResTask task) {
-        logger.info("run task {}", task.getTaskId());
+        logger.info("run task {}", task.desc());
         updateTaskStatus(task, TaskStatus.Run);
 
         CompletableFuture.supplyAsync(task::run, slots)
                 .thenAccept(r -> {
-                    logger.info("success task {}", task.getTaskId());
+                    logger.info("success task {}", task.desc());
                     saveTaskOutput(task, r);
                     updateTaskStatus(task, TaskStatus.Success);
                 })
                 .exceptionally(e -> {
-                    logger.info("fail task {}", task.getTaskId(), e);
+                    logger.info("fail task {}", task.desc(), e);
                     updateTaskStatus(task, TaskStatus.Fail);
                     return null;
                 });
@@ -98,13 +98,13 @@ public class WorkerActor extends AbstractBehavior<WorkerActor.WorkerEvent> {
     private void saveTaskOutput(ResTask task, Output output) {
         String path = config.getString("res.task.info.baseDir")  + "/" + task.getTaskId() + "/output.txt";
         FileUtils.writeStringToFile(new File(path), JacksonUtil.toJsonString(output));
-        logger.info("save task {} output in {}", task.getTaskId(), path);
+        logger.info("save task {} output in {}", task.desc(), path);
     }
 
     @SneakyThrows
     private void updateTaskStatus(ResTask task, TaskStatus status) {
         String path = config.getString("res.task.info.baseDir")  + "/" + task.getTaskId() + "/status.txt";
         FileUtils.writeStringToFile(new File(path), JacksonUtil.toJsonString(status));
-        logger.info("save task {} status in {}", task.getTaskId(), path);
+        logger.info("save task {} status in {}", task.desc(), path);
     }
 }

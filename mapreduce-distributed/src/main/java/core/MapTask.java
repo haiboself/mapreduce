@@ -7,7 +7,7 @@ import core.dataformat.Partitioner;
 import core.dataformat.Split;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
-import res.ResTask;
+import rsm.ResTask;
 
 import java.io.File;
 import java.util.*;
@@ -68,5 +68,10 @@ public class MapTask<K1, V1, K2, V2> extends ResTask {
         int partitionNum = partitioner.getPartition(kvPair.getK(), kvPair.getV(), reduceNumns);
         FileUtils.writeLines(
                 spillFiles[partitionNum], Collections.singleton(JacksonUtil.toJsonString(kvPair)), true);
+    }
+
+    @Override
+    public String desc() {
+        return "mapTask " + getTaskId();
     }
 }

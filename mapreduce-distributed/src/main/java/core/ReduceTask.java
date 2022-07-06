@@ -5,8 +5,8 @@ import core.dataformat.DataFormat;
 import core.dataformat.KvPair;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
-import res.Output;
-import res.ResTask;
+import rsm.Output;
+import rsm.ResTask;
 
 import java.io.File;
 import java.util.*;
@@ -64,4 +64,8 @@ public class ReduceTask<K2,V2,K3,V3> extends ResTask {
         };
     }
 
+    @Override
+    public String desc() {
+        return "reduceTask " + getTaskId();
+    }
 }

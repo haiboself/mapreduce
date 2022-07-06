@@ -1,4 +1,4 @@
-package res;
+package rsm;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
@@ -71,7 +71,7 @@ public class MasterActor extends AbstractBehavior<MasterActor.MasterEvent> {
             ResTask task = queue.poll();
 
             // distribute task
-            logger.info("submit task {} to worker {}", task.getTaskId(), worker.path().toString());
+            logger.info("submit task {} to worker {}", task.desc(), worker.path().toString());
             worker.tell(new WorkerActor.StartTask(getContext().getSelf(), task));
         }
 

@@ -1,4 +1,4 @@
-package res;
+package rsm;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
@@ -16,4 +16,8 @@ public class ResTask {
 
     public void init(){}
     public Output run(){return null;}
+
+    public String desc(){
+        return taskId;
+    }
 }

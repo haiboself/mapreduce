@@ -1,4 +1,4 @@
-package res;
+package rsm;
 
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;

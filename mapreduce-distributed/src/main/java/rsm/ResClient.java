@@ -1,4 +1,4 @@
-package res;
+package rsm;
 
 
 import com.typesafe.config.Config;

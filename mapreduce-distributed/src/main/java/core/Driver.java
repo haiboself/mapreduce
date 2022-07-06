@@ -7,8 +7,8 @@ import core.dataformat.Split;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import res.ResClient;
-import res.TaskStatus;
+import rsm.ResClient;
+import rsm.TaskStatus;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -51,6 +51,7 @@ public class Driver<K1,V1,K2,V2,K3,V3>  {
        for(Split split : inputFormat.getSplits()){
            String mapTaskId = resClient.submit(new MapTask<>(mapper, split, reducerNum)).get();
            mapTasks.add(mapTaskId);
+           log.info("run map task {}", mapTaskId);
        }
 
        // waiting for map finished
@@ -61,10 +62,10 @@ public class Driver<K1,V1,K2,V2,K3,V3>  {
                String mapId = iterator.next();
                TaskStatus status = resClient.getStatus(mapId);
                if (status.isFail()) {
-                   log.info("reduce {} fail", mapId);
+                   log.info("map {} fail", mapId);
                    iterator.remove();
                } else if(status.isSuccess()){
-                   log.info("reduce {} success", mapId);
+                   log.info("map {} success", mapId);
                    iterator.remove();
                    MapOutPut output = resClient.getOutput(mapId, MapOutPut.class).get();
                    mapOutPuts.add(output);
@@ -81,17 +82,17 @@ public class Driver<K1,V1,K2,V2,K3,V3>  {
            reduceTasks.add(reduceTaskId);
        }
 
-       // waiting for  finished
+       // waiting for reduce finished
         while (!reduceTasks.isEmpty()) {
             Iterator<String> iterator = reduceTasks.iterator();
             while (iterator.hasNext()){
                 String reduceId = iterator.next();
                 TaskStatus status = resClient.getStatus(reduceId);
                 if (status.isFail()) {
-                    log.info("map {} fail", reduceId);
+                    log.info("reduce {} fail", reduceId);
                     iterator.remove();
                 } else if(status.isSuccess()){
-                    log.info("map {} success", reduceId);
+                    log.info("reduce {} success", reduceId);
                     iterator.remove();
                 }
             }
