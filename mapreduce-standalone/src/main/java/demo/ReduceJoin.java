@@ -143,9 +143,8 @@ public class ReduceJoin
          * 2  b            4  D
          * 4  d            5  E
          * 5  e            6  F
-         *
-         * Step1:
-         * - data split -> data skew
+         * Steps:
+         * - data split -> read skew
          * - mapStage
          *  - run map task
          *  - spill to local disk -> data skew
