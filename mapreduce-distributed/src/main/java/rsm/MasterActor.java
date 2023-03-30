@@ -64,7 +64,7 @@ public class MasterActor extends AbstractBehavior<MasterActor.MasterEvent> {
         while (!queue.isEmpty() && !workers.isEmpty()){
             // select worker
             ActorRef<WorkerActor.WorkerEvent> worker = new ArrayList<>(workers).get(
-                    new Random().nextInt() % workers.size()
+                    new Random().nextInt(workers.size())
             );
 
             // get task
