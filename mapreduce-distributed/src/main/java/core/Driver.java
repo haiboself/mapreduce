@@ -4,6 +4,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import core.dataformat.DataFormat;
 import core.dataformat.Split;
+import io.vavr.Tuple2;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -21,13 +22,12 @@ public class Driver<K1,V1,K2,V2,K3,V3>  {
     private int reducerNum =  1;
 
     @NonNull
-    private Mapper<K1,V1,K2,V2> mapper;
+    private List<Tuple2<Mapper<K1,V1,K2,V2>, DataFormat>> mappers = new LinkedList<>();
+
     @NonNull
     private Reducer<K2,V2,K3,V3> reducer;
     private Reducer<K2,V2,K3,V3> combiner;
 
-    @NonNull
-    private DataFormat inputFormat;
     @NonNull
     private DataFormat outputFormat;
     private Config conf;
@@ -48,11 +48,13 @@ public class Driver<K1,V1,K2,V2,K3,V3>  {
        // map stage
        log.info("start map stage====================");
        List<String> mapTasks = new LinkedList<>();
-       for(Split split : inputFormat.getSplits()){
-           String mapTaskId = resClient.submit(new MapTask<>(mapper, split, reducerNum)).get();
-           mapTasks.add(mapTaskId);
-           log.info("run map task {}", mapTaskId);
-       }
+       for (Tuple2<Mapper<K1, V1, K2, V2>, DataFormat> m : mappers) {
+           for (Split split : m._2.getSplits()) {
+               String mapTaskId = resClient.submit(new MapTask<>(m._1, split, reducerNum)).get();
+               mapTasks.add(mapTaskId);
+               log.info("run map task {}", mapTaskId);
+           }
+        }
 
        // waiting for map finished
        List<MapOutPut> mapOutPuts = new LinkedList<>();
@@ -99,5 +101,9 @@ public class Driver<K1,V1,K2,V2,K3,V3>  {
         }
 
         log.info("end reduce stage====================");
+    }
+
+    public void addMapper(Mapper<K1,V1,K2,V2> mapper, DataFormat dataFormat) {
+        mappers.add(new Tuple2<>(mapper, dataFormat));
     }
 }

@@ -57,9 +57,7 @@ public class WordCount {
             put("partitioner.class", "default");
         }}));
 
-        driver.setMapper(new TokenizerMapper());
-        driver.setInputFormat(new LocalTextFileFormat(inputPath));
-
+        driver.addMapper(new TokenizerMapper(), new LocalTextFileFormat(inputPath));
         driver.setReducer(new IntSumReducer());
         driver.setOutputFormat(new LocalTextFileFormat(outputPath));
         driver.setReducerNum(5);

@@ -11,7 +11,6 @@ import rsm.ResTask;
 
 import java.io.File;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 public class MapTask<K1, V1, K2, V2> extends ResTask {
 
@@ -56,8 +55,6 @@ public class MapTask<K1, V1, K2, V2> extends ResTask {
         );
 
         middleOutputs.forEach(output -> output.forEach(this::partitionForShuffle));
-
-        TimeUnit.SECONDS.sleep(3);
         return MapOutPut.fromFiles(spillFiles);
     }
 
