@@ -134,6 +134,26 @@ public class ReduceJoin
         MultiInputDriver<Integer, String, String, Record<String,String>, String, List<String>> driver = new MultiInputDriver<>();
         driver.setConf(new Conf());
 
+        /* explain process:
+         *   T1     join     T2     on id = id
+         * id val          id val
+         * 6  f            1  A
+         * 1  a            2  B
+         * 1  a            3  C     = ?
+         * 2  b            4  D
+         * 4  d            5  E
+         * 5  e            6  F
+         *
+         * Step1:
+         * - data split -> data skew
+         * - mapStage
+         *  - run map task
+         *  - spill to local disk -> data skew
+         * - reduceStage
+         *  - fetch map output file -> data skew
+         *  - sort and merge
+         *  - run reduce task
+         */
         driver.addMapper(new JoinAMapper(), StringInputFormat.of("6 f,1 a,1 a,2 b,4 d,5 e", ","));
         driver.addMapper(new JoinBMapper(), StringInputFormat.of("1 A,2 B,2 B,3 C,4 D,5 E,6 F", ","));
 
